@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Humanizer AI - Scholar Layout Engine</title>
+    <meta name="description" content="Humanizer AI — bypass AI detection for academic papers. Upload a PDF or paste text to get a fully humanized, layout-preserved output.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { colors: { darkBg: '#0f172a', cardBg: 'rgba(30,41,59,0.7)' } } }
+        }
+    </script>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Auto-resize textarea */
+        #text-input {
+            field-sizing: content;
+            min-height: 180px;
+            resize: none;
+            overflow: hidden;
+        }
+        /* Fallback for browsers that don't support field-sizing */
+        @supports not (field-sizing: content) {
+            #text-input { resize: vertical; }
+        }
+        /* Auto-resize output result textarea */
+        #text-result {
+            field-sizing: content;
+            min-height: 200px;
+            resize: none;
+            overflow: hidden;
+        }
+        @supports not (field-sizing: content) {
+            #text-result { resize: vertical; }
+        }
+        /* Tab active state */
+        .tab-active {
+            background: linear-gradient(135deg, rgba(6,182,212,0.2), rgba(139,92,246,0.2));
+            border-color: rgba(6,182,212,0.5) !important;
+            color: #e2e8f0 !important;
+        }
+        /* Smooth panel switch */
+        .input-panel { transition: opacity 0.2s ease; }
+        /* Result text fade-in */
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fadeSlideIn 0.4s ease forwards; }
+        /* Char counter colors */
+        .char-ok    { color: #94a3b8; }
+        .char-warn  { color: #f59e0b; }
+        .char-limit { color: #ef4444; }
+    </style>
+</head>
+<body class="bg-darkBg text-slate-100 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-violet-500 flex items-center justify-center font-bold text-white shadow-lg shadow-cyan-500/20">H</div>
+                <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent">Humanizer AI</h1>
+            </div>
+            <div class="flex items-center space-x-3 bg-slate-800/60 px-4 py-1.5 rounded-full border border-slate-700/50">
+                <span class="w-2.5 h-2.5 rounded-full bg-slate-500 shadow-md" id="ws-status-bulb"></span>
+                <span class="text-xs font-semibold text-slate-400 tracking-wide" id="ws-status-text">Disconnected</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-6 py-8 flex flex-col gap-8">
+
+        <!-- Top Row: Quotas + Input Area -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+            <!-- Left: Token Quotas -->
+            <section class="lg:col-span-1 flex flex-col space-y-6">
+                <div class="glass-panel glass-panel-hover p-6 flex flex-col space-y-5">
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-cyan-400">Token Quotas</h2>
+
+                    <div class="flex flex-col space-y-2">
+                        <div class="flex items-center justify-between text-xs font-semibold">
+                            <span class="text-slate-400">OpenRouter</span>
+                            <span id="quota-val-openrouter" class="text-slate-200">0%</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-700" style="width:0%" id="quota-bar-openrouter"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col space-y-2">
+                        <div class="flex items-center justify-between text-xs font-semibold">
+                            <span class="text-slate-400">Google Gemini</span>
+                            <span id="quota-val-google" class="text-slate-200">0%</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-700" style="width:0%" id="quota-bar-google"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col space-y-2">
+                        <div class="flex items-center justify-between text-xs font-semibold">
+                            <span class="text-slate-400">Groq Llama 3</span>
+                            <span id="quota-val-groq" class="text-slate-200">0%</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-violet-500 to-purple-500 transition-all duration-700" style="width:0%" id="quota-bar-groq"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col space-y-2">
+                        <div class="flex items-center justify-between text-xs font-semibold">
+                            <span class="text-slate-400">DeepSeek R1</span>
+                            <span id="quota-val-deepseek" class="text-slate-200">0%</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-700" style="width:0%" id="quota-bar-deepseek"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Warning box -->
+                <div class="hidden glass-panel border-amber-500/30 bg-amber-500/5 p-4 flex items-start space-x-3" id="alert-warning-box">
+                    <span class="text-amber-500 text-lg">⚠️</span>
+                    <div class="text-xs text-amber-200/90 font-medium leading-relaxed" id="alert-warning-text"></div>
+                </div>
+            </section>
+
+            <!-- Right: Input Tabs + Pipeline -->
+            <section class="lg:col-span-3 flex flex-col space-y-6">
+
+                <!-- Mode Tabs -->
+                <div class="flex space-x-2">
+                    <button id="tab-pdf-btn"
+                        class="tab-active flex items-center space-x-2 px-5 py-2.5 rounded-xl text-sm font-semibold border border-slate-700/60 text-slate-300 bg-slate-800/40 hover:bg-slate-700/40 transition-all"
+                        onclick="window.appController && appController.switchTab('pdf')">
+                        <span>📄</span><span>Upload PDF</span>
+                    </button>
+                    <button id="tab-text-btn"
+                        class="flex items-center space-x-2 px-5 py-2.5 rounded-xl text-sm font-semibold border border-slate-700/60 text-slate-400 bg-slate-800/20 hover:bg-slate-700/40 transition-all"
+                        onclick="window.appController && appController.switchTab('text')">
+                        <span>✏️</span><span>Paste Text</span>
+                    </button>
+                </div>
+
+                <!-- PDF Upload Panel -->
+                <div id="pdf-upload-zone" class="input-panel glass-panel p-8 flex flex-col items-center justify-center min-h-[200px] text-center upload-zone rounded-xl cursor-pointer">
+                    <input type="file" id="pdf-file-input" class="hidden" accept=".pdf">
+                    <div class="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-2xl mb-4 shadow-inner shadow-cyan-400/5" id="upload-icon-container">📥</div>
+                    <h3 class="text-lg font-bold text-slate-100 tracking-tight" id="upload-title">Upload Research Paper</h3>
+                    <p class="text-xs text-slate-400 mt-1 max-w-sm leading-relaxed" id="upload-desc">Drag and drop your PDF here, or click to browse files.</p>
+                    <div class="text-xs font-semibold text-cyan-400 hidden mt-2" id="upload-loading-text">Validating and uploading file...</div>
+                </div>
+
+                <!-- Text Paste Panel -->
+                <div id="panel-text" class="input-panel hidden glass-panel p-6 flex flex-col space-y-4 rounded-xl">
+                    <div class="flex flex-col space-y-2">
+                        <label class="text-xs font-bold uppercase tracking-wider text-cyan-400">Document Title (Optional)</label>
+                        <input
+                            type="text"
+                            id="text-title-input"
+                            class="w-full bg-slate-950/60 border border-slate-700/60 rounded-xl px-4 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/30 transition-all"
+                            placeholder="Enter a custom name for your document..."
+                            spellcheck="false"
+                        />
+                    </div>
+                    <div class="flex flex-col space-y-2">
+                        <label class="text-xs font-bold uppercase tracking-wider text-cyan-400">Paste Your Text</label>
+                        <textarea
+                            id="text-input"
+                            class="w-full bg-slate-950/60 border border-slate-700/60 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/30 transition-all leading-relaxed"
+                            placeholder="Paste your essay, research paper, article, or any text here... The area expands automatically as you type."
+                            spellcheck="false"
+                        ></textarea>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-xs font-mono char-ok" id="text-char-count">0 / 60,000</span>
+                            <span class="text-xs text-slate-600">characters</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button id="clear-text-btn"
+                                class="px-3 py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-300 bg-slate-800/40 hover:bg-slate-700/60 rounded-lg border border-slate-700/40 transition-all">
+                                Clear
+                            </button>
+                            <button id="humanize-text-btn"
+                                class="flex items-center space-x-2 px-5 py-2 bg-gradient-to-r from-cyan-600 to-violet-600 hover:from-cyan-500 hover:to-violet-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-cyan-900/30 transition-all hover:scale-105 active:scale-95">
+                                <span>✨</span><span>Humanize Text</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Text Result Panel (hidden until complete) -->
+                    <div id="text-result-panel" class="hidden flex-col space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">✅ Humanized Output</span>
+                            <div class="flex items-center space-x-2">
+                                <button id="copy-result-btn"
+                                    class="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold text-slate-300 bg-slate-800/60 hover:bg-slate-700/60 rounded-lg border border-slate-700/40 transition-all">
+                                    <span>📋</span><span>Copy</span>
+                                </button>
+                                <button id="download-text-result-btn"
+                                    class="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-300 bg-emerald-600/20 hover:bg-emerald-600/30 rounded-lg border border-emerald-600/30 transition-all">
+                                    <span>📥</span><span>Download .txt</span>
+                                </button>
+                                <button id="new-text-btn"
+                                    class="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold text-slate-400 bg-slate-800/40 hover:bg-slate-700/60 rounded-lg border border-slate-700/40 transition-all">
+                                    <span>+</span><span>New</span>
+                                </button>
+                            </div>
+                        </div>
+                        <textarea
+                            id="text-result"
+                            readonly
+                            class="w-full bg-slate-950/80 border border-emerald-600/20 rounded-xl px-4 py-3 text-sm text-slate-200 leading-relaxed focus:outline-none fade-in"
+                            placeholder="Humanized text will appear here..."
+                        ></textarea>
+                    </div>
+                </div>
+
+                <!-- Pipeline Visualizer -->
+                <div class="glass-panel p-6 flex flex-col space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-sm font-bold uppercase tracking-wider text-cyan-400">Node Map Pipeline</h2>
+                        <span class="text-xs font-semibold text-slate-400" id="processing-stats-text">Idle</span>
+                    </div>
+                    <div class="w-full bg-slate-950/80 border border-slate-800/80 rounded-xl overflow-hidden min-h-[300px] flex items-center justify-center" id="svg-visualization-container">
+                        <span class="text-xs font-medium text-slate-500" id="visualizer-fallback-text">
+                            No active run. Upload a PDF or paste text to start.
+                        </span>
+                    </div>
+                </div>
+
+            </section>
+        </div>
+
+        <!-- Documents History -->
+        <section class="glass-panel p-6 flex flex-col space-y-4" id="documents-history-section">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-sm">📂</div>
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-emerald-400">Humanized Documents</h2>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button id="delete-all-btn"
+                        class="flex items-center space-x-1.5 text-xs font-semibold text-red-400 hover:text-red-300 bg-red-500/5 hover:bg-red-500/10 px-3 py-1.5 rounded-lg border border-red-500/20 hover:border-red-500/40 transition-all">
+                        <span>🗑️</span><span>Clear All</span>
+                    </button>
+                    <button id="refresh-runs-btn"
+                        class="flex items-center space-x-1.5 text-xs font-semibold text-slate-400 hover:text-slate-200 bg-slate-800/60 hover:bg-slate-700/60 px-3 py-1.5 rounded-lg border border-slate-700/50 transition-all">
+                        <span>↺</span><span>Refresh</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-slate-800/80">
+                <table class="w-full text-xs" id="runs-table">
+                    <thead>
+                        <tr class="border-b border-slate-800/80 bg-slate-900/40">
+                            <th class="text-left px-4 py-3 text-slate-400 font-semibold tracking-wide uppercase">Document / Text Name</th>
+                            <th class="text-left px-4 py-3 text-slate-400 font-semibold tracking-wide uppercase">Type</th>
+                            <th class="text-left px-4 py-3 text-slate-400 font-semibold tracking-wide uppercase">Chunks</th>
+                            <th class="text-left px-4 py-3 text-slate-400 font-semibold tracking-wide uppercase">Started</th>
+                            <th class="text-left px-4 py-3 text-slate-400 font-semibold tracking-wide uppercase">Status</th>
+                            <th class="text-right px-4 py-3 text-slate-400 font-semibold tracking-wide uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="runs-table-body">
+                        <tr>
+                            <td colspan="6" class="px-4 py-8 text-center text-slate-500">
+                                <span class="text-2xl">🔄</span><br>Loading documents...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="text-xs text-slate-500 text-center">
+                Only <strong class="text-slate-400">completed</strong> runs can be downloaded. Processing may take a few minutes.
+            </p>
+        </section>
+
+    </main>
+
+    <footer class="border-t border-slate-800 bg-slate-950 py-4 text-center">
+        <span class="text-slate-500 text-xs font-medium">Humanizer AI Scholarly Extraction Engine &copy; 2026. All rights reserved.</span>
+    </footer>
+
+    <script src="js/websocket_client.js"></script>
+    <script src="js/pipeline_view.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

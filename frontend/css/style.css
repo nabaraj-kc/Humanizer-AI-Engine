@@ -1,0 +1,141 @@
+/*
+frontend/css/style.css
+======================
+Custom design styling for the Humanizer AI Engine dashboard.
+Enforces rich dark mode aesthetics, glassmorphism card panels, and node visualizer glows.
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --bg-dark: #0f172a;
+    --bg-card: rgba(30, 41, 59, 0.7);
+    --border-card: rgba(255, 255, 255, 0.08);
+    --primary-cyan: #06b6d4;
+    --primary-purple: #8b5cf6;
+    --primary-green: #10b981;
+    --primary-red: #ef4444;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    overflow-x: hidden;
+    background-image: 
+        radial-gradient(at 10% 20%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+        radial-gradient(at 90% 80%, rgba(6, 182, 212, 0.15) 0px, transparent 50%);
+    background-attachment: fixed;
+}
+
+/* Glassmorphism Panels */
+.glass-panel {
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-card);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-panel-hover:hover {
+    border-color: rgba(6, 182, 212, 0.25);
+    box-shadow: 0 8px 32px 0 rgba(6, 182, 212, 0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Custom Drag-and-Drop Area */
+.upload-zone {
+    border: 2px dashed rgba(255, 255, 255, 0.15);
+    transition: all 0.3s ease;
+}
+
+.upload-zone.dragover {
+    border-color: var(--primary-cyan);
+    background: rgba(6, 182, 212, 0.05);
+    box-shadow: 0 0 16px rgba(6, 182, 212, 0.2);
+}
+
+/* Pulsing and glowing nodes */
+.node-circle {
+    transition: all 0.5s ease;
+}
+
+.node-idle {
+    fill: #334155;
+    stroke: #475569;
+    stroke-width: 2px;
+}
+
+.node-processing {
+    fill: #1e1b4b;
+    stroke: var(--primary-purple);
+    stroke-width: 3px;
+    filter: drop-shadow(0 0 8px var(--primary-purple));
+    animation: pulseGlow 1.5s infinite ease-in-out;
+}
+
+.node-success {
+    fill: #064e3b;
+    stroke: var(--primary-green);
+    stroke-width: 3px;
+    filter: drop-shadow(0 0 8px var(--primary-green));
+}
+
+.node-error {
+    fill: #7f1d1d;
+    stroke: var(--primary-red);
+    stroke-width: 3px;
+    filter: drop-shadow(0 0 8px var(--primary-red));
+}
+
+/* Connecting Layout Paths */
+.node-path {
+    stroke-dasharray: 8;
+    animation: dashProgress 20s linear infinite;
+    stroke-width: 2px;
+    transition: stroke 0.5s ease;
+}
+
+.path-idle {
+    stroke: #334155;
+}
+
+.path-processing {
+    stroke: var(--primary-purple);
+}
+
+.path-success {
+    stroke: var(--primary-green);
+}
+
+.path-error {
+    stroke: var(--primary-red);
+}
+
+/* Animations */
+@keyframes pulseGlow {
+    0%, 100% {
+        transform: scale(1.0);
+        filter: drop-shadow(0 0 4px var(--primary-purple));
+    }
+    50% {
+        transform: scale(1.1);
+        filter: drop-shadow(0 0 12px var(--primary-purple));
+    }
+}
+
+@keyframes dashProgress {
+    to {
+        stroke-dashoffset: -1000;
+    }
+}
+
+/* Quota percentage indicator rings */
+.progress-ring-circle {
+    transition: stroke-dashoffset 0.35s;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+}

@@ -1,0 +1,28 @@
+# Python & Virtual Environments
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment Variables & Secrets
+.env
+.env.production
+*.pem
+*.key
+storage/*.db
+storage/*.sqlite
+
+# IDE & OS Junk
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Build & Test Cache
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/

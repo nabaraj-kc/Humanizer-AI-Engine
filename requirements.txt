@@ -1,0 +1,136 @@
+# ============================================================
+# Humanizer AI Engine — Dependency Manifest
+# Advanced Layout-Preserving AI Humanizer Engine (Antigravity Edition)
+# ============================================================
+# IMPORTANT: Install with: pip install -r requirements.txt
+# Python 3.11+ required.
+# ============================================================
+
+# ------------------------------------------------------------
+# WEB FRAMEWORK & ASYNC SERVER
+# ------------------------------------------------------------
+
+# FastAPI: Primary ASGI web framework providing async route handling,
+# dependency injection, and auto-generated OpenAPI schema documentation.
+fastapi==0.111.0
+
+# Uvicorn: ASGI server powering the async event loop at runtime.
+# The 'standard' extras include websockets, httptools, and uvloop support.
+uvicorn[standard]==0.29.0
+
+# Python-multipart: Required by FastAPI for parsing multipart/form-data
+# file upload payloads sent from the frontend PDF upload terminal.
+python-multipart==0.0.9
+
+# ------------------------------------------------------------
+# DATA VALIDATION & SETTINGS MANAGEMENT
+# ------------------------------------------------------------
+
+# Pydantic v2: Data validation and serialization library.
+# Used for defining strict request/response schemas on all API routes.
+pydantic==2.7.1
+
+# Pydantic-Settings: Extends Pydantic with environment variable parsing,
+# loading .env files and enforcing required config parameters at startup.
+pydantic-settings==2.2.1
+
+# ------------------------------------------------------------
+# PDF EXTRACTION & LAYOUT RECONSTRUCTION
+# ------------------------------------------------------------
+
+# PyMuPDF (fitz): High-fidelity PDF parsing engine. Extracts per-block
+# text content alongside spatial bounding coordinates (X0, Y0, X1, Y1),
+# font sizes, and layout metadata for geometric preservation.
+PyMuPDF==1.24.3
+
+# ReportLab: PDF canvas generation toolkit. Used in the reconstruction
+# phase to draw humanized text strings onto new document layers using
+# the exact coordinate parameters recovered from the original PDF.
+reportlab==4.2.0
+
+# ------------------------------------------------------------
+# LOCAL ADVERSARIAL AI DETECTION (ML STACK)
+# ------------------------------------------------------------
+
+# PyTorch: Deep learning compute framework powering the local
+# RoBERTa-based AI text classifier. CPU-only builds are used for
+# maximum portability across hardware configurations.
+torch==2.3.0
+
+# Transformers: Hugging Face library managing model downloads, tokenizers,
+# and inference pipelines for the roberta-base-openai-detector classifier
+# that scores text blocks for AI-generation probability.
+transformers==4.41.1
+
+# Accelerate: Hugging Face library enabling optimized model loading
+# strategies including CPU offloading and quantization for memory efficiency.
+accelerate==0.30.0
+
+# SentencePiece: Tokenizer backend required by several transformer models
+# for subword tokenization during classification inference.
+sentencepiece==0.2.0
+
+# ------------------------------------------------------------
+# DATABASE LAYER
+# ------------------------------------------------------------
+
+# SQLAlchemy: Async ORM providing declarative table models, relationship
+# mapping, and query construction for the SQLite tracking database.
+sqlalchemy==2.0.7  # Pinned: 2.0.30+ requires asyncio.Runner (Python 3.11 final only; this env is 3.11.0a2)
+
+# Aiosqlite: Async SQLite driver enabling non-blocking database I/O
+# within FastAPI's async request handlers without stalling the event loop.
+aiosqlite==0.20.0
+
+# ------------------------------------------------------------
+# ASYNC NETWORKING & HTTP CLIENTS
+# ------------------------------------------------------------
+
+# Aiohttp: Async HTTP client library used for calling external AI provider
+# REST APIs (Groq, DeepSeek) and Hugging Face serverless inference endpoints
+# with connection pooling and timeout management.
+aiohttp==3.9.5
+
+# WebSockets: Low-level WebSocket protocol implementation library supporting
+# the real-time bidirectional messaging channel between the backend pipeline
+# engine and the frontend status dashboard.
+websockets==12.0
+
+# HTTPX: Async-capable HTTP client used by FastAPI's test utilities for
+# mocking and verifying API endpoint behavior in the integration test suites.
+httpx==0.27.0
+
+# ------------------------------------------------------------
+# SECURITY & CRYPTOGRAPHY
+# ------------------------------------------------------------
+
+# Cryptography: Foundational cryptographic primitives library providing
+# secure key generation, hashing, and token signing operations used for
+# JWT authentication and secure file storage operations.
+cryptography==42.0.7
+
+# Python-jose: JWT token encoding and decoding library for session
+# authentication and API security boundary enforcement.
+python-jose[cryptography]==3.3.0
+
+# ------------------------------------------------------------
+# UTILITIES
+# ------------------------------------------------------------
+
+# Python-dotenv: Loads environment variables from .env files into the
+# runtime environment, enabling local credential management without
+# hardcoding sensitive API keys in source code.
+python-dotenv==1.0.1
+
+# Aiofiles: Async file I/O library enabling non-blocking disk reads
+# and writes during PDF upload handling and export generation.
+aiofiles==23.2.1
+
+# tqdm: Progress bar utility for CLI monitoring during model downloads
+# and batch processing operations in the backend pipeline.
+tqdm==4.66.4
+
+# Numpy: Numerical computing library used by the metrics calculator
+# for statistical operations (standard deviation, mean sentence length)
+# that drive the burstiness scoring algorithm.
+numpy==1.26.4
